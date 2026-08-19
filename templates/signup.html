@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up - FoodConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="auth-container">
+        <h2>Create Account 🍽️</h2>
+        <p class="auth-subtitle">Join FoodConnect and start discovering</p>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flash-messages">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/signup">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" id="username" required>
+                <span id="username-status"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Sign Up</button>
+        </form>
+
+        <p class="auth-footer">Already have an account? <a href="/login">Login</a></p>
+    </div>
+
+    <script>
+    const usernameInput = document.getElementById('username');
+    const statusSpan = document.getElementById('username-status');
+
+    usernameInput.addEventListener('input', async () => {
+        const username = usernameInput.value;
+        if (username.length < 3) {
+            statusSpan.textContent = '';
+            return;
+        }
+        const response = await fetch(`/check-username?username=${username}`);
+        const data = await response.json();
+        if (data.available) {
+            statusSpan.textContent = '✅ Available';
+            statusSpan.style.color = '#2e9e4f';
+        } else {
+            statusSpan.textContent = '❌ Already taken';
+            statusSpan.style.color = '#d63333';
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - FoodConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Welcome, {{ username }}! 🎉</h2>
+        <p>You are successfully logged in to FoodConnect.</p>
+        <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+</body>
+</html>

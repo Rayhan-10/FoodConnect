@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify OTP - FoodConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="auth-container">
+        <h2>Verify Your Account 🔐</h2>
+        <p class="otp-note">We've sent a 6-digit code. For now, check your terminal/console — real email sending comes later.</p>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flash-messages">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/verify-otp">
+            <div class="form-group">
+                <label>Enter OTP</label>
+                <input type="text" name="otp" required>
+            </div>
+            <button type="submit" class="btn-primary">Verify</button>
+        </form>
+    </div>
+</body>
+</html>

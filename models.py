@@ -11,6 +11,8 @@ class User(db.Model):
     phone = db.Column(db.String(20))
     password_hash = db.Column(db.String(255), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
+    otp_code = db.Column(db.String(6))
+    otp_created_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Restaurant(db.Model):
