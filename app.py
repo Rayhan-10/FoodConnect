@@ -4,6 +4,14 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_bcrypt import Bcrypt
 from models import db, User
 
+import smtplib
+from email.message import EmailMessage
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///foodconnect.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -11,6 +19,21 @@ app.config['SECRET_KEY'] = 'dev-secret-key-change-later'
 
 db.init_app(app)
 bcrypt = Bcrypt(app)
+def send_otp_email(to_email, otp):
+    msg = EmailMessage()
+    msg['Subject'] = 'Your FoodConnect Verification Code'
+    msg['From'] = os.getenv('EMAIL_ADDRESS')
+    msg['To'] = to_email
+    msg.set_content(f'Your FoodConnect OTP code is: {otp}\n\nThis code will expire soon.')
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(os.getenv('EMAIL_ADDRESS'), os.getenv('EMAIL_APP_PASSWORD'))
+            smtp.send_message(msg)
+        return True
+    except Exception as e:
+        print(f'Email sending failed: {e}')
+        return False
 
 # ---------- Homepage ----------
 @app.route('/')
@@ -58,7 +81,11 @@ def signup():
         db.session.commit()
 
         # Simulate sending OTP (prints to terminal for now)
-        print(f'===== OTP for {username}: {otp} =====')
+        email_sent = send_otp_email(email, otp)
+        if email_sent:
+            print(f'OTP email sent to {email}')
+        else:
+            print(f'===== (Email failed, fallback) OTP for {username}: {otp} =====')
 
         session['pending_user_id'] = new_user.id
         return redirect(url_for('verify_otp'))
