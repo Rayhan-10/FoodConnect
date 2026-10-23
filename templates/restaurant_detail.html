@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ restaurant.name }} — FoodConnect</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"></head><body class="fc-body">
+<nav class="fc-nav"><a class="brand" href="{{ url_for('home') }}"><span class="brand-mark">f.</span><span>food<span class="brand-accent">connect</span></span></a><div class="nav-center"><a href="{{ url_for('home') }}">Home</a><a class="nav-current" href="{{ url_for('restaurants') }}">Explore restaurants</a><a href="{{ url_for('home') }}#community">Community</a></div><div class="nav-actions">{% if session.get('user_id') %}<a class="nav-quiet" href="{{ url_for('dashboard') }}">Hi, {{ session.get('username') }}</a><a class="btn btn-dark btn-small" href="{{ url_for('logout') }}">Log out</a>{% else %}<a class="nav-quiet" href="{{ url_for('login') }}">Log in</a><a class="btn btn-dark btn-small" href="{{ url_for('signup') }}">Join FoodConnect</a>{% endif %}</div></nav>
+<main class="detail-main"><a class="back-link" href="{{ url_for('restaurants') }}">← Back to restaurants</a>{% with messages = get_flashed_messages() %}{% if messages %}<div class="flash-messages">{% for message in messages %}<div>{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+{% set detail_image = restaurant.cover_image if restaurant.cover_image and restaurant.cover_image.startswith('http') else 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=90' %}<section class="detail-hero"><img src="{{ detail_image }}" alt="{{ restaurant.name }}"><div class="detail-hero-shade"></div><div class="detail-hero-content"><span class="cuisine-pill">{{ restaurant.cuisine_type or 'Local favourite' }}</span><h1>{{ restaurant.name }}</h1><p>Discover the place through the people who have been there.</p><div class="detail-hero-meta"><span>★ {{ avg_rating if avg_rating else 'New' }} <small>({{ total_reviews }} reviews)</small></span><span>৳ {{ {'$': '150–400', '$$': '400–900', '$$$': '900+'}.get(restaurant.price_range, 'Budget varies') }} <small>/ person</small></span><span>⌖ {{ location.address if location and location.address else 'Chattogram' }}</span></div></div></section>
+
+<section class="food-menu-section" id="food-menu">
+  <div class="menu-heading-row"><div><span class="section-label">WHAT'S ON THE MENU</span><h2>Good food, <em>clear prices.</em></h2><p>Browse dishes shared for this restaurant by the FoodConnect community.</p></div><span class="menu-count">{{ food_items|length }} dish{% if food_items|length != 1 %}es{% endif %}</span></div>
+  <form class="menu-filter-bar" method="GET" action="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}#food-menu">
+    <label class="menu-search"><span>⌕</span><input type="search" name="food" value="{{ menu_search }}" placeholder="Search dishes…" aria-label="Search menu dishes"></label>
+    <select name="food_category" aria-label="Filter by food category"><option value="">All categories</option>{% for category in food_categories %}<option value="{{ category }}" {% if menu_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select>
+    <button class="btn btn-orange" type="submit">Find food</button>{% if menu_search or menu_category %}<a class="menu-reset" href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}#food-menu">Reset</a>{% endif %}
+  </form>
+  {% if food_items %}<div class="food-menu-grid">{% for item in food_items %}<article class="food-menu-card">
+    {% set food_image = item.image_path or 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=85' %}
+    {% if food_image.startswith('http') %}<img class="food-menu-photo" src="{{ food_image }}" alt="{{ item.name }}" loading="lazy">{% else %}<img class="food-menu-photo" src="{{ url_for('static', filename=food_image) }}" alt="{{ item.name }}" loading="lazy">{% endif %}
+    <div class="food-menu-card-body"><div class="food-menu-title-row"><span class="food-category-tag">{{ item.category or 'Menu item' }}</span><strong class="food-price">৳{{ '{:,.0f}'.format(item.price|float) if item.price|float == (item.price|float)|int else '{:,.2f}'.format(item.price|float) }}</strong></div><h3>{{ item.name }}</h3><p>{{ item.description or 'A dish listed by the FoodConnect community.' }}</p></div>
+  </article>{% endfor %}</div>{% else %}<div class="menu-empty-state"><span>🍽</span><h3>{% if menu_search or menu_category %}No dishes match those filters.{% else %}The menu is waiting to be discovered.{% endif %}</h3><p>{% if menu_search or menu_category %}Try another search or reset the filters.{% else %}Add a dish with its price and photo to help people know what this restaurant serves.{% endif %}</p></div>{% endif %}
+  {% if session.get('user_id') %}<details class="add-food-panel"><summary><span class="add-food-plus">＋</span><span><strong>Add a menu item</strong><small>Share a dish, price and photo with the community</small></span><span class="add-food-summary-arrow">＋</span></summary>
+    <form class="add-food-form" method="POST" enctype="multipart/form-data" action="{{ url_for('add_food_item', restaurant_id=restaurant.id) }}">
+      <div class="food-form-grid"><label>Food name *<input name="name" maxlength="150" required placeholder="e.g. Chicken Biryani"></label><label>Price (BDT) *<input name="price" type="number" min="0" max="10000000" step="0.01" required placeholder="e.g. 250"></label><label>Category<select name="category"><option>Main Course</option><option>Rice & Biryani</option><option>Fast Food</option><option>Snacks & Starters</option><option>Dessert</option><option>Drinks</option><option>Seafood</option><option>Vegetarian</option><option>Other</option></select></label><label>Photo upload<input name="image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label><label class="food-form-full">Or image URL<input name="image_url" type="url" placeholder="https://… (optional if uploading a photo)"></label><label class="food-form-full">Description<textarea name="description" rows="2" maxlength="500" placeholder="Short description, portion size or ingredients"></textarea></label></div>
+      <p class="food-form-note">Only add prices and photos you have permission to share. Food photos are limited to 5 MB by the app.</p><button class="btn btn-orange" type="submit">Add to menu ↗</button>
+    </form></details>{% else %}<p class="menu-login-note"><a href="{{ url_for('login') }}">Log in</a> to suggest a food item for this restaurant.</p>{% endif %}
+</section>
+
+{% if restaurant.video_url %}{% set video_id = restaurant.video_url.split('v=')[-1].split('&')[0] if 'v=' in restaurant.video_url else restaurant.video_url.split('youtu.be/')[-1].split('?')[0] if 'youtu.be/' in restaurant.video_url else '' %}{% if video_id %}<section class="restaurant-video"><div><span class="section-label">A CLOSER LOOK</span><h2>See the place <em>in action.</em></h2></div><div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/{{ video_id }}" title="{{ restaurant.name }} video" loading="lazy" allowfullscreen></iframe></div></section>{% endif %}{% endif %}
+<div class="detail-layout"><div class="detail-main-column"><section class="detail-section"><div class="detail-section-heading"><div><span class="section-label">THE COMMUNITY SAYS</span><h2>Reviews & <em>stories.</em></h2></div><span class="review-count-pill">{{ total_reviews }} reviews</span></div>
+{% if session.get('user_id') %}<form class="write-review" method="POST" action="{{ url_for('post_review',restaurant_id=restaurant.id) }}" enctype="multipart/form-data"><div class="write-review-head"><span class="user-avatar">{{ session.get('username','F')[:1]|upper }}</span><div><strong>Been here? Tell us about it.</strong><small>Your experience helps another food lover.</small></div></div><label class="review-label">Your rating</label><div class="star-rating"><input type="radio" id="star5" name="stars" value="5" required><label for="star5">★</label><input type="radio" id="star4" name="stars" value="4"><label for="star4">★</label><input type="radio" id="star3" name="stars" value="3"><label for="star3">★</label><input type="radio" id="star2" name="stars" value="2"><label for="star2">★</label><input type="radio" id="star1" name="stars" value="1"><label for="star1">★</label></div><label class="review-label" for="review-content">Your experience</label><textarea id="review-content" name="content" rows="4" placeholder="What did you try? How was the food, service and atmosphere?" required></textarea><div class="review-form-bottom"><label class="upload-label">＋ Add a food photo <input type="file" name="photo" accept="image/*"></label><label class="visited-date">Visited on <input type="date" name="visited_on"></label><button class="btn btn-orange" type="submit">Post review ↗</button></div></form>{% else %}<div class="review-signin"><div><strong>Your next review could help someone.</strong><p>Log in to rate this place, share a photo and join the conversation.</p></div><a class="btn btn-orange" href="{{ url_for('login') }}">Log in to review ↗</a></div>{% endif %}
+{% if reviews %}{% for review in reviews %}<article class="review-card" data-review-id="{{ review.id }}"><div class="review-header"><span class="user-avatar">{{ review.username[:1]|upper }}</span><div class="review-author"><strong>{{ review.username }}</strong><small>{{ review.created_at.strftime('%d %b %Y') }}</small></div><span class="review-author-badge">COMMUNITY REVIEW</span></div><div class="review-stars" aria-label="{{ review.stars }} out of 5 stars">{% for n in range(5) %}<span class="{% if n < review.stars %}star-on{% else %}star-off{% endif %}">★</span>{% endfor %}<span class="sentiment-tag sentiment-{{ review.sentiment_label }}">{{ review.sentiment_label|title }} tone</span></div><p class="review-content">{{ review.content }}</p>{% if review.image_url %}<img src="{{ review.image_url }}" class="review-image" alt="Food photo shared in review">{% endif %}<div class="reaction-bar"><button class="reaction-btn like-btn" data-type="like">♡ Helpful <span class="like-count">{{ review.like_count }}</span></button><button class="reaction-btn dislike-btn" data-type="dislike">Not for me <span class="dislike-count">{{ review.dislike_count }}</span></button></div><div class="comments-section">{% for comment in review.comments %}<div class="comment-item"><b>{{ comment.username }}</b> {{ comment.content }}</div>{% endfor %}{% if session.get('user_id') %}<div class="comment-form"><input type="text" class="comment-input" placeholder="Add something helpful to the conversation…"><button class="comment-submit-btn">Send ↗</button></div>{% else %}<small class="comment-login"><a href="{{ url_for('login') }}">Log in</a> to join the conversation.</small>{% endif %}</div></article>{% endfor %}{% else %}<div class="no-reviews"><span>✦</span><h3>Be the first to share a story.</h3><p>No reviews yet. Your experience can help the next person decide where to eat.</p></div>{% endif %}</section></div>
+<aside class="detail-sidebar"><section class="sidebar-card"><span class="section-label">AT A GLANCE</span><h3>Good to know</h3><div class="sidebar-fact"><span>🍽</span><div><small>Cuisine</small><strong>{{ restaurant.cuisine_type or 'Not specified' }}</strong></div></div><div class="sidebar-fact"><span>৳</span><div><small>Average budget</small><strong>{{ {'$': '৳150–400', '$$': '৳400–900', '$$$': '৳900+'}.get(restaurant.price_range, 'Not specified') }} / person</strong></div></div><div class="sidebar-fact"><span>⌖</span><div><small>Location</small><strong>{{ location.address if location and location.address else 'Chattogram' }}</strong></div></div><div class="sidebar-fact"><span>★</span><div><small>Community rating</small><strong>{{ avg_rating if avg_rating else 'Not rated yet' }} · {{ total_reviews }} reviews</strong></div></div></section>
+{% if location and location.latitude and location.longitude %}<section class="sidebar-card map-card"><span class="section-label">FIND YOUR WAY</span><h3>Location</h3><iframe title="Map showing {{ restaurant.name }}" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={{ location.longitude-0.01 }}%2C{{ location.latitude-0.01 }}%2C{{ location.longitude+0.01 }}%2C{{ location.latitude+0.01 }}&layer=mapnik&marker={{ location.latitude }}%2C{{ location.longitude }}"></iframe><p>{{ location.address }}</p><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat={{ location.latitude }}&mlon={{ location.longitude }}#map=16/{{ location.latitude }}/{{ location.longitude }}">Open full map ↗</a></section>{% endif %}<section class="sidebar-cta"><span>♡</span><h3>Love finding local gems?</h3><p>Share your favourite places and help the FoodConnect community grow.</p><a class="btn btn-dark" href="{{ url_for('add_restaurant') }}">Suggest a restaurant ↗</a></section></aside></div></main>
+<footer class="fc-footer"><a class="brand" href="{{ url_for('home') }}"><span class="brand-mark">f.</span><span>food<span class="brand-accent">connect</span></span></a><p>Good food brings people together.</p><div><a href="{{ url_for('restaurants') }}">Explore</a><a href="{{ url_for('home') }}#community">Community</a></div><small>© 2026 FoodConnect</small></footer>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script>
+(() => {
+  const isLoggedIn = {{ 'true' if session.get('user_id') else 'false' }};
+  const restaurantId = {{ restaurant.id }};
+  const socket = window.io ? window.io() : null;
+  if (socket) socket.emit('join_restaurant', {restaurant_id: restaurantId});
+
+  function getCard(reviewId) {
+    return document.querySelector(`.review-card[data-review-id="${reviewId}"]`);
+  }
+  function addComment(payload) {
+    const card = getCard(payload.review_id);
+    if (!card) return;
+    const section = card.querySelector('.comments-section');
+    if (!section) return;
+    // Socket.IO can deliver the sender's event before fetch returns; avoid duplicate DOM rows.
+    const signature = `${payload.username}\u0000${payload.content}`;
+    if ([...section.querySelectorAll('.comment-item')].some(el => el.dataset.signature === signature)) return;
+    const item = document.createElement('div');
+    item.className = 'comment-item';
+    item.dataset.signature = signature;
+    const name = document.createElement('b');
+    name.textContent = payload.username;
+    item.append(name, document.createTextNode(' ' + payload.content));
+    const form = section.querySelector('.comment-form');
+    section.insertBefore(item, form || null);
+  }
+  function updateReaction(payload) {
+    const card = getCard(payload.review_id);
+    if (!card) return;
+    card.querySelector('.like-count').textContent = payload.like_count;
+    card.querySelector('.dislike-count').textContent = payload.dislike_count;
+  }
+  if (socket) {
+    socket.on('comment_added', addComment);
+    socket.on('reaction_updated', updateReaction);
+  }
+
+  document.querySelectorAll('.reaction-btn').forEach(btn => btn.addEventListener('click', async () => {
+    if (!isLoggedIn) { window.location.href = '{{ url_for('login') }}'; return; }
+    const card = btn.closest('.review-card');
+    btn.disabled = true;
+    try {
+      const response = await fetch(`/review/${card.dataset.reviewId}/react`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type: btn.dataset.type})
+      });
+      const data = await response.json();
+      if (!response.ok) alert(data.error || 'Could not save reaction.');
+      else updateReaction(data);
+    } catch (_) { alert('Connection error. Please try again.'); }
+    finally { btn.disabled = false; }
+  }));
+
+  document.querySelectorAll('.comment-submit-btn').forEach(btn => btn.addEventListener('click', async () => {
+    const card = btn.closest('.review-card');
+    const input = card.querySelector('.comment-input');
+    const content = input.value.trim();
+    if (!content) return;
+    btn.disabled = true;
+    try {
+      const response = await fetch(`/review/${card.dataset.reviewId}/comment`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({content})
+      });
+      const data = await response.json();
+      if (!response.ok) alert(data.error || 'Could not post comment.');
+      else { addComment(data); input.value = ''; }
+    } catch (_) { alert('Connection error. Please try again.'); }
+    finally { btn.disabled = false; }
+  }));
+})();
+</script></body></html>

@@ -3,6 +3,7 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -15,12 +16,16 @@ class User(db.Model):
     otp_created_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class Restaurant(db.Model):
     __tablename__ = 'restaurants'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     cuisine_type = db.Column(db.String(80))
     price_range = db.Column(db.String(20))
+    cover_image = db.Column(db.String(255), default='default_restaurant.jpg')
+    video_url = db.Column(db.String(255))
+
 
 class Location(db.Model):
     __tablename__ = 'locations'
@@ -30,6 +35,7 @@ class Location(db.Model):
     longitude = db.Column(db.Float)
     address = db.Column(db.String(255))
 
+
 class Review(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True)
@@ -37,7 +43,10 @@ class Review(db.Model):
     restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.id'), nullable=False)
     content = db.Column(db.Text)
     visited_on = db.Column(db.Date)
+    image_path = db.Column(db.String(255))
+    sentiment_label = db.Column(db.String(20), default='neutral')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class Rating(db.Model):
     __tablename__ = 'ratings'
@@ -45,6 +54,7 @@ class Rating(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.id'), nullable=False)
     stars = db.Column(db.Integer, nullable=False)
+
 
 class Comment(db.Model):
     __tablename__ = 'comments'
@@ -54,6 +64,7 @@ class Comment(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class Like(db.Model):
     __tablename__ = 'likes'
     id = db.Column(db.Integer, primary_key=True)
@@ -61,9 +72,25 @@ class Like(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     type = db.Column(db.String(10))  # 'like' or 'dislike'
 
+
 class Media(db.Model):
     __tablename__ = 'media'
     id = db.Column(db.Integer, primary_key=True)
     review_id = db.Column(db.Integer, db.ForeignKey('reviews.id'), nullable=False)
     type = db.Column(db.String(10))  # 'image' or 'video'
     url = db.Column(db.String(255), nullable=False)
+
+
+class FoodItem(db.Model):
+    __tablename__ = 'food_items'
+    id = db.Column(db.Integer, primary_key=True)
+    restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.id'), nullable=False, index=True)
+    name = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.String(500))
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    category = db.Column(db.String(60), default='Main Course')
+    image_path = db.Column(db.String(500))
+    is_available = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    restaurant = db.relationship('Restaurant', backref=db.backref('food_items', lazy=True, cascade='all, delete-orphan'))

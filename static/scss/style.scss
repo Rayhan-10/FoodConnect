@@ -1,0 +1,19 @@
+// FoodConnect Phase 9 source stylesheet. Compile to static/css/style.css with Sass.
+$ink: #25221f;
+$muted: #77716b;
+$orange: #f0643b;
+$cream: #fffaf5;
+$paper: #fff;
+$line: #eee5dc;
+$green: #326b4d;
+$radius-card: 17px;
+$shadow-card: 0 18px 50px rgba(58, 39, 24, .08);
+
+:root {
+  --ink: #{$ink}; --muted: #{$muted}; --orange: #{$orange};
+  --cream: #{$cream}; --paper: #{$paper}; --line: #{$line};
+  --green: #{$green}; --shadow: #{$shadow-card};
+}
+
+// The full compiled stylesheet is kept in ../css/style.css so Sass is optional at runtime.
+// Shared tokens above document the single design system used across all pages.
