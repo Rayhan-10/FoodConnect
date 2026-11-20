@@ -11,6 +11,7 @@ from flask_socketio import SocketIO, emit, join_room
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from PIL import Image, UnidentifiedImageError
+from image_paths import FALLBACK_REL, restaurant_photo_rel, food_photo_rel
 from dotenv import load_dotenv
 
 from models import db, User, Restaurant, Location, Review, Rating, Comment, Like, Media, FoodItem
@@ -49,49 +50,13 @@ def load_user(user_id):
         return None
 
 
-def _restaurant_asset_path(cuisine):
-    mapping = {
-        'indian': 'indian.svg', 'japanese': 'japanese.svg', 'fast food': 'fast-food.svg',
-        'italian': 'italian.svg', 'bangladeshi': 'bangladeshi.svg', 'cafe': 'cafe.svg',
-        'chinese': 'chinese.svg', 'mexican': 'mexican.svg', 'korean': 'korean.svg',
-        'seafood': 'seafood.svg',
-    }
-    filename = mapping.get((cuisine or '').strip().lower(), 'bangladeshi.svg')
-    return f'images/restaurants/{filename}'
+def _restaurant_asset_path(cuisine=None):
+    """Default cover for a restaurant with no photo yet: a neutral, non-illustrated fallback."""
+    return FALLBACK_REL
 
 
-def _restaurant_asset(place):
-    cuisine = (getattr(place, 'cuisine_type', '') or '').strip().lower()
-    return url_for('static', filename=_restaurant_asset_path(cuisine))
-
-
-def _food_asset(item):
-    name = (getattr(item, 'name', '') or '').lower()
-    category = (getattr(item, 'category', '') or '').lower()
-    rules = [
-        (('biryani', 'polao', 'tehari'), 'biryani.svg'),
-        (('sushi', 'nigiri', 'roll'), 'sushi.svg'),
-        (('burger', 'hot dog', 'sandwich'), 'burger.svg'),
-        (('pasta', 'lasagna', 'risotto'), 'pasta.svg'),
-        (('pizza',), 'pizza.svg'),
-        (('mezban', 'bhuna', 'kacchi'), 'mezban.svg'),
-        (('fish', 'prawn', 'seafood', 'squid'), 'grilled-fish.svg'),
-        (('noodle', 'chow mein', 'yakisoba'), 'noodles.svg'),
-        (('dumpling', 'gyoza', 'spring roll'), 'dumplings.svg'),
-        (('taco', 'burrito', 'quesadilla'), 'tacos.svg'),
-        (('bibimbap', 'kimchi', 'korean'), 'bibimbap.svg'),
-        (('coffee', 'latte', 'cappuccino', 'americano', 'frappe'), 'coffee.svg'),
-        (('salad', 'avocado',), 'salad.svg'),
-        (('chicken', 'curry', 'paneer', 'dal'), 'curry.svg'),
-    ]
-    for words, filename in rules:
-        if any(word in name for word in words):
-            return url_for('static', filename=f'images/food/{filename}')
-    if category in ('drinks', 'dessert', 'breakfast'):
-        filename = 'coffee.svg'
-    else:
-        filename = 'curry.svg'
-    return url_for('static', filename=f'images/food/{filename}')
+def _fallback_url():
+    return url_for('static', filename=FALLBACK_REL)
 
 
 def _safe_static_url(relative):
@@ -116,36 +81,40 @@ def _safe_upload_url(relative):
     return None
 
 
+def _is_illustration(stored):
+    return (stored or '').lower().endswith('.svg')
+
+
 def restaurant_image(place):
     stored = (getattr(place, 'cover_image', '') or '').strip()
     if stored.startswith('uploads/'):
         found = _safe_upload_url(stored[len('uploads/'):])
         if found:
             return found
-    if stored and not stored.startswith(('http://', 'https://')):
+    elif stored and not stored.startswith(('http://', 'https://')) and not _is_illustration(stored):
         found = _safe_static_url(stored)
         if found:
             return found
-    return _restaurant_asset(place)
+    # Seeded restaurants: derive the photo from the name (also repairs rows that still hold an old SVG path).
+    found = _safe_static_url(restaurant_photo_rel(getattr(place, 'name', '')))
+    return found or _fallback_url()
 
 
 def food_image(item):
     stored = (getattr(item, 'image_path', '') or '').strip()
-    if stored.startswith(('http://', 'https://')):
-        return _food_asset(item)
     if stored.startswith('/uploads/'):
-        found = _safe_upload_url(stored[len('/uploads/'):])
-        if found:
-            return found
+        stored = stored[1:]
     if stored.startswith('uploads/'):
         found = _safe_upload_url(stored[len('uploads/'):])
         if found:
             return found
-    if stored:
+    elif stored and not stored.startswith(('http://', 'https://')) and not _is_illustration(stored):
         found = _safe_static_url(stored)
         if found:
             return found
-    return _food_asset(item)
+    restaurant = getattr(item, 'restaurant', None)
+    found = _safe_static_url(food_photo_rel(getattr(restaurant, 'name', ''), getattr(item, 'name', '')))
+    return found or _fallback_url()
 
 
 def media_image(stored):
@@ -158,9 +127,15 @@ def media_image(stored):
         found = _safe_upload_url(value[len('/uploads/'):])
         if found:
             return found
-    return url_for('static', filename='images/food-placeholder.svg')
+    return _fallback_url()
 
 
+def static_photo(rel):
+    """Local photo URL for a fixed path, or the neutral fallback when the file is missing."""
+    return _safe_static_url(rel) or _fallback_url()
+
+
+app.jinja_env.filters['static_photo'] = static_photo
 app.jinja_env.filters['restaurant_image'] = restaurant_image
 app.jinja_env.filters['food_image'] = food_image
 app.jinja_env.filters['media_image'] = media_image

@@ -1,30 +1,7 @@
 from app import app
 from models import db, Restaurant, Location, FoodItem
 from app import upgrade_local_schema
-
-
-def local_food_asset(food_name):
-    name = (food_name or '').lower()
-    rules = [
-        (('biryani', 'polao', 'tehari'), 'biryani.svg'),
-        (('sushi', 'nigiri', 'roll'), 'sushi.svg'),
-        (('burger', 'hot dog', 'sandwich'), 'burger.svg'),
-        (('pasta', 'lasagna', 'risotto'), 'pasta.svg'),
-        (('pizza',), 'pizza.svg'),
-        (('mezban', 'bhuna', 'kacchi'), 'mezban.svg'),
-        (('fish', 'prawn', 'seafood', 'squid'), 'grilled-fish.svg'),
-        (('noodle', 'chow mein', 'yakisoba'), 'noodles.svg'),
-        (('dumpling', 'gyoza', 'spring roll'), 'dumplings.svg'),
-        (('taco', 'burrito', 'quesadilla'), 'tacos.svg'),
-        (('bibimbap', 'kimchi', 'korean'), 'bibimbap.svg'),
-        (('coffee', 'latte', 'cappuccino', 'americano', 'frappe'), 'coffee.svg'),
-        (('salad', 'avocado'), 'salad.svg'),
-        (('chicken', 'curry', 'paneer', 'dal'), 'curry.svg'),
-    ]
-    for words, filename in rules:
-        if any(word in name for word in words):
-            return f'images/food/{filename}'
-    return 'images/food/curry.svg'
+from image_paths import restaurant_photo_rel, food_photo_rel
 
 
 def sample_dietary_tags(food_name):
@@ -39,16 +16,6 @@ def sample_dietary_tags(food_name):
     if any(term in name for term in vegan_terms):
         tags.append('Vegan')
     return ','.join(tags)
-
-
-def local_restaurant_asset(cuisine):
-    mapping = {
-        'Indian': 'indian.svg', 'Japanese': 'japanese.svg', 'Fast Food': 'fast-food.svg',
-        'Italian': 'italian.svg', 'Bangladeshi': 'bangladeshi.svg', 'Cafe': 'cafe.svg',
-        'Chinese': 'chinese.svg', 'Mexican': 'mexican.svg', 'Korean': 'korean.svg',
-        'Seafood': 'seafood.svg',
-    }
-    return f"images/restaurants/{mapping.get(cuisine, 'bangladeshi.svg')}"
 
 
 sample_restaurants = [
@@ -212,7 +179,7 @@ with app.app_context():
             name=r["name"],
             cuisine_type=r["cuisine_type"],
             price_range=r["price_range"],
-            cover_image=local_restaurant_asset(r["cuisine_type"])
+            cover_image=restaurant_photo_rel(r["name"])
         )
         db.session.add(restaurant)
         db.session.flush()
@@ -240,32 +207,49 @@ with app.app_context():
             db.session.add(FoodItem(
                 restaurant_id=restaurant.id, name=food_name, price=price,
                 category=category, description=description,
-                image_path=local_food_asset(food_name), dietary_tags=sample_dietary_tags(food_name), is_available=True
+                image_path=food_photo_rel(restaurant_name, food_name), dietary_tags=sample_dietary_tags(food_name), is_available=True
             ))
             existing_names.add(food_name.casefold())
             added_foods += 1
         db.session.flush()
 
     db.session.commit()
-    # Convert previously seeded external demo image URLs to stable local assets.
+    # Point seeded records at their local photographs.  Only legacy values are replaced
+    # (empty, external URL, SVG illustration, old default).  Verified photo paths and user
+    # uploads ("uploads/...") are never overwritten, so running this script repeatedly is safe.
+    def _is_legacy(value, default_names=()):
+        value = (value or '').strip()
+        return (not value or value.startswith(('http://', 'https://')) or value.lower().endswith('.svg')
+                or value in default_names)
+
+    catalog_foods = {}
+    for rest_name in sample_foods_by_restaurant.keys() | extra_foods_by_restaurant.keys():
+        names = [f[0] for f in sample_foods_by_restaurant.get(rest_name, []) + extra_foods_by_restaurant.get(rest_name, [])]
+        catalog_foods[rest_name] = {n.casefold(): n for n in names}
+
     repaired_food_images = 0
     for item in FoodItem.query.all():
-        if not item.image_path or item.image_path.startswith(('http://', 'https://')):
-            item.image_path = local_food_asset(item.name)
-            repaired_food_images += 1
+        if not _is_legacy(item.image_path):
+            continue
+        rest_name = item.restaurant.name if item.restaurant else ''
+        canonical = catalog_foods.get(rest_name, {}).get((item.name or '').casefold())
+        item.image_path = food_photo_rel(rest_name, canonical) if canonical else None
+        repaired_food_images += 1
 
     for item in FoodItem.query.all():
         if not item.dietary_tags:
             item.dietary_tags = sample_dietary_tags(item.name)
 
+    known_restaurants = {r["name"] for r in sample_restaurants}
     repaired_restaurant_images = 0
     for place in Restaurant.query.all():
-        if not place.cover_image or place.cover_image.startswith(('http://', 'https://')) or place.cover_image == 'default_restaurant.jpg':
-            place.cover_image = local_restaurant_asset(place.cuisine_type)
-            repaired_restaurant_images += 1
+        if not _is_legacy(place.cover_image, ('default_restaurant.jpg',)):
+            continue
+        place.cover_image = restaurant_photo_rel(place.name) if place.name in known_restaurants else None
+        repaired_restaurant_images += 1
 
     db.session.commit()
     print(f'Added {added_count} new restaurants. Total sample restaurants: {Restaurant.query.count()}. Existing restaurants were kept.')
     print(f'Added {added_foods} demo menu items. Seeded demo restaurants now have at least 10 items when enough unique sample dishes are defined.')
-    print(f'Converted {repaired_food_images} food images and {repaired_restaurant_images} restaurant covers to local assets.')
-    print('Prices and photos are illustrative demo data, not verified official restaurant menus.')
+    print(f'Pointed {repaired_food_images} food items and {repaired_restaurant_images} restaurants at local photographs.')
+    print('Prices are illustrative demo data, not verified official restaurant menus.')

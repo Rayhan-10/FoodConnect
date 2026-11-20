@@ -42,3 +42,18 @@ img{max-width:100%}
 .admin-place-actions{display:flex;gap:10px;justify-content:flex-end;align-items:center;max-width:1240px;margin:18px auto;padding:0 22px}
 .admin-place-actions form{margin:0}
 @media(max-width:700px){.admin-place-actions{justify-content:flex-start;flex-wrap:wrap}}
+
+
+/* FoodConnect hero: responsive four-photo editorial collage */
+.hero-art{position:relative;min-width:0;padding:12px 12px 30px 24px}
+.hero-collage{display:grid;grid-template-columns:1.18fr .82fr;gap:12px;height:410px}
+.hero-collage-main,.hero-collage-side>div{min-width:0;min-height:0;overflow:hidden;border-radius:22px;background:#eee4da;box-shadow:var(--shadow)}
+.hero-collage-main img,.hero-collage-side img{display:block;width:100%;height:100%;object-fit:cover}
+.hero-collage-side{display:grid;grid-template-rows:1fr 1fr 1fr;gap:12px;min-height:0}
+.hero-collage-side>div{border-radius:17px}
+.hero-art .note-rating{top:0;right:0}
+.hero-art .note-community{bottom:0;left:0}
+.hero-art .hero-deco{right:-18px;bottom:82px}
+@media(max-width:1000px){.hero-collage{height:360px;gap:10px}.hero-collage-side{gap:10px}}
+@media(max-width:760px){.hero-art{padding:0 8px 28px}.hero-collage{height:340px;grid-template-columns:1.12fr .88fr;gap:9px}.hero-collage-main,.hero-collage-side>div{border-radius:17px}.hero-collage-side{gap:9px}.hero-art .note-rating{top:8px;right:-2px}.hero-art .note-community{left:-3px;bottom:0}.hero-art .hero-deco{right:-4px;bottom:55px;width:66px;height:66px;font-size:8px}}
+@media(max-width:520px){.hero-collage{height:300px;gap:7px}.hero-collage-side{gap:7px}.hero-collage-main,.hero-collage-side>div{border-radius:13px}.hero-art .note-rating{top:6px;right:-3px}.hero-art .hero-deco{right:-3px;bottom:52px}}
