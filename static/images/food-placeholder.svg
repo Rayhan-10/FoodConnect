@@ -1,20 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" role="img" aria-label="Food photo unavailable">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff7ed"/><stop offset="1" stop-color="#f0dfce"/></linearGradient>
-    <linearGradient id="plate" x1="0" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#f5eee7"/></linearGradient>
-  </defs>
-  <rect width="900" height="560" fill="url(#bg)"/>
-  <circle cx="450" cy="255" r="170" fill="#e8d4c0" opacity=".6"/>
-  <circle cx="450" cy="245" r="142" fill="url(#plate)" stroke="#dec9b4" stroke-width="7"/>
-  <circle cx="450" cy="245" r="108" fill="#fffaf4" stroke="#efe2d4" stroke-width="4"/>
-  <g fill="#df6a3b">
-    <ellipse cx="410" cy="215" rx="34" ry="19" transform="rotate(-22 410 215)"/>
-    <ellipse cx="480" cy="205" rx="30" ry="18" transform="rotate(25 480 205)"/>
-    <ellipse cx="468" cy="273" rx="38" ry="21" transform="rotate(-12 468 273)"/>
-    <ellipse cx="393" cy="276" rx="25" ry="16" transform="rotate(32 393 276)"/>
-  </g>
-  <g fill="#6b8d50"><circle cx="435" cy="193" r="11"/><circle cx="500" cy="242" r="10"/><circle cx="425" cy="294" r="9"/><circle cx="375" cy="238" r="8"/></g>
-  <g stroke="#c88e35" stroke-width="7" stroke-linecap="round"><path d="M430 236l20 12"/><path d="M482 287l-18 -12"/><path d="M390 201l14 11"/></g>
-  <text x="450" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#6b5545">Food photo unavailable</text>
-  <text x="450" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#8a7667">A menu item from the FoodConnect community</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 200" role="img" aria-label="Food illustration">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#F5D99C"/><stop offset="1" stop-color="#FFF7EA"/></linearGradient><filter id="s"><feGaussianBlur stdDeviation="5"/></filter></defs>
+<rect width="250" height="200" rx="18" fill="url(#bg)"/>
+<circle cx="125" cy="106" r="79" fill="#B58B69" opacity=".16" filter="url(#s)"/>
+<circle cx="125" cy="99" r="76" fill="#FFFDF8"/><circle cx="125" cy="99" r="64" fill="#E8DED0"/><circle cx="125" cy="99" r="57" fill="#FFF9F0"/>
+<ellipse cx="93" cy="85" rx="17" ry="14" fill="#B95D3D" transform="rotate(-25 93 85)"/><ellipse cx="119" cy="88" rx="17" ry="14" fill="#64834C" transform="rotate(-7 119 88)"/><ellipse cx="163" cy="86" rx="11" ry="13" fill="#E6B84C" transform="rotate(-9 163 86)"/><ellipse cx="77" cy="110" rx="10" ry="13" fill="#F0E2C8" transform="rotate(25 77 110)"/><ellipse cx="125" cy="110" rx="14" ry="8" fill="#B95E47" transform="rotate(-12 125 110)"/><ellipse cx="164" cy="119" rx="18" ry="7" fill="#B95D3D" transform="rotate(-24 164 119)"/><ellipse cx="87" cy="151" rx="11" ry="9" fill="#64834C" transform="rotate(-18 87 151)"/><ellipse cx="127" cy="149" rx="14" ry="9" fill="#E6B84C" transform="rotate(13 127 149)"/><ellipse cx="164" cy="152" rx="14" ry="14" fill="#F0E2C8" transform="rotate(26 164 152)"/><path d="M 111 113 q 18 -20 32 -2 q -15 18 -32 2" fill="#64834C"/><path d="M 121 97 q 18 -20 32 -2 q -15 18 -32 2" fill="#64834C"/><path d="M 158 101 q 18 -20 32 -2 q -15 18 -32 2" fill="#64834C"/><path d="M 173 91 q 18 -20 32 -2 q -15 18 -32 2" fill="#64834C"/><path d="M 161 113 q 18 -20 32 -2 q -15 18 -32 2" fill="#64834C"/>
+<circle cx="125" cy="99" r="76" fill="none" stroke="#D7C6B3" stroke-width="2"/>
+<path d="M22 169 Q125 188 228 169" stroke="#D5B99A" stroke-width="3" fill="none" opacity=".45"/>
 </svg>

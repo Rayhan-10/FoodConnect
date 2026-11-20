@@ -29,7 +29,7 @@ This update refreshes the existing Flask project with a dark charcoal + orange v
 - Restyled restaurant listing, search/filter controls, cards, pagination, and empty state.
 - Applied a consistent charcoal/orange theme to restaurant details, reviews, auth forms, and dashboard.
 - Added responsive layouts for narrower screens.
-- Restaurant card/hero photography currently uses remote Unsplash image URLs, so those images need an internet connection. The core app itself runs locally.
+- Restaurant and food cards use local SVG artwork; Google Fonts and optional embeds may use external network access.
 
 ## Important
 

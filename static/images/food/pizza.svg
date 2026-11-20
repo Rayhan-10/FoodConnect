@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 200" role="img" aria-label="pizza illustration">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#EED6B8"/><stop offset="1" stop-color="#FFF7EA"/></linearGradient><filter id="s"><feGaussianBlur stdDeviation="5"/></filter></defs>
+<rect width="250" height="200" rx="18" fill="url(#bg)"/>
+<circle cx="125" cy="106" r="79" fill="#B58B69" opacity=".16" filter="url(#s)"/>
+<circle cx="125" cy="99" r="76" fill="#FFFDF8"/><circle cx="125" cy="99" r="64" fill="#E8DED0"/><circle cx="125" cy="99" r="57" fill="#FFF9F0"/>
+<ellipse cx="77" cy="89" rx="17" ry="8" fill="#B45C43" transform="rotate(-25 77 89)"/><ellipse cx="119" cy="85" rx="11" ry="12" fill="#668D7B" transform="rotate(-17 119 85)"/><ellipse cx="159" cy="80" rx="14" ry="12" fill="#E6B84C" transform="rotate(-4 159 80)"/><ellipse cx="79" cy="111" rx="14" ry="8" fill="#F0E2C8" transform="rotate(-15 79 111)"/><ellipse cx="119" cy="111" rx="17" ry="10" fill="#B95E47" transform="rotate(34 119 111)"/><ellipse cx="163" cy="113" rx="17" ry="10" fill="#B45C43" transform="rotate(2 163 113)"/><ellipse cx="79" cy="146" rx="18" ry="13" fill="#668D7B" transform="rotate(28 79 146)"/><ellipse cx="128" cy="148" rx="17" ry="12" fill="#E6B84C" transform="rotate(14 128 148)"/><ellipse cx="166" cy="143" rx="11" ry="7" fill="#F0E2C8" transform="rotate(22 166 143)"/><path d="M 94 102 q 18 -20 32 -2 q -15 18 -32 2" fill="#668D7B"/><path d="M 130 125 q 18 -20 32 -2 q -15 18 -32 2" fill="#668D7B"/><path d="M 133 84 q 18 -20 32 -2 q -15 18 -32 2" fill="#668D7B"/><path d="M 136 105 q 18 -20 32 -2 q -15 18 -32 2" fill="#668D7B"/><path d="M 104 76 q 18 -20 32 -2 q -15 18 -32 2" fill="#668D7B"/>
+<circle cx="125" cy="99" r="76" fill="none" stroke="#D7C6B3" stroke-width="2"/>
+<path d="M22 169 Q125 188 228 169" stroke="#D5B99A" stroke-width="3" fill="none" opacity=".45"/>
+</svg>

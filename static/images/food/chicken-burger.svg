@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 200" role="img" aria-label="chicken-burger illustration">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#E7D4C1"/><stop offset="1" stop-color="#FFF7EA"/></linearGradient><filter id="s"><feGaussianBlur stdDeviation="5"/></filter></defs>
+<rect width="250" height="200" rx="18" fill="url(#bg)"/>
+<circle cx="125" cy="106" r="79" fill="#B58B69" opacity=".16" filter="url(#s)"/>
+<circle cx="125" cy="99" r="76" fill="#FFFDF8"/><circle cx="125" cy="99" r="64" fill="#E8DED0"/><circle cx="125" cy="99" r="57" fill="#FFF9F0"/>
+<ellipse cx="89" cy="84" rx="14" ry="11" fill="#9A6044" transform="rotate(-15 89 84)"/><ellipse cx="124" cy="89" rx="10" ry="11" fill="#658C9A" transform="rotate(31 124 89)"/><ellipse cx="158" cy="80" rx="15" ry="11" fill="#E6B84C" transform="rotate(1 158 80)"/><ellipse cx="85" cy="113" rx="14" ry="11" fill="#F0E2C8" transform="rotate(-24 85 113)"/><ellipse cx="119" cy="113" rx="19" ry="11" fill="#B95E47" transform="rotate(-16 119 113)"/><ellipse cx="169" cy="117" rx="18" ry="7" fill="#9A6044" transform="rotate(12 169 117)"/><ellipse cx="84" cy="146" rx="16" ry="14" fill="#658C9A" transform="rotate(18 84 146)"/><ellipse cx="124" cy="141" rx="13" ry="7" fill="#E6B84C" transform="rotate(2 124 141)"/><ellipse cx="168" cy="141" rx="12" ry="14" fill="#F0E2C8" transform="rotate(18 168 141)"/><path d="M 163 76 q 18 -20 32 -2 q -15 18 -32 2" fill="#658C9A"/><path d="M 140 137 q 18 -20 32 -2 q -15 18 -32 2" fill="#658C9A"/><path d="M 146 125 q 18 -20 32 -2 q -15 18 -32 2" fill="#658C9A"/><path d="M 154 71 q 18 -20 32 -2 q -15 18 -32 2" fill="#658C9A"/><path d="M 168 80 q 18 -20 32 -2 q -15 18 -32 2" fill="#658C9A"/>
+<circle cx="125" cy="99" r="76" fill="none" stroke="#D7C6B3" stroke-width="2"/>
+<path d="M22 169 Q125 188 228 169" stroke="#D5B99A" stroke-width="3" fill="none" opacity=".45"/>
+</svg>

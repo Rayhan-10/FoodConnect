@@ -18,7 +18,7 @@ This version redesigns the presentation around FoodConnect's core idea: restaura
 6. Open `http://127.0.0.1:5000`.
 
 ## Notes
-- Restaurant and food photography is loaded from Unsplash, and typography from Google Fonts, so those assets need an internet connection.
+- Restaurant and food cards use local SVG artwork. Google Fonts and optional embeds still use external network access.
 - The map uses OpenStreetMap and appears only when location coordinates exist. No API key is required for the embedded map.
 - Prices shown are broad illustrative budget bands, not verified menu prices.
 - This package's Python syntax and Jinja template parsing were checked. Full Flask/browser integration testing could not be run in the build environment because Flask dependencies were not installed there; please test on your PC before presenting.

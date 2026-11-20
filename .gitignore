@@ -1,5 +1,11 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 instance/
 .env
+*.db
+*.sqlite
+*.sqlite3
+static/images/uploads/*
+!static/images/uploads/.gitkeep

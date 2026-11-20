@@ -1,0 +1,38 @@
+databases:
+  - name: foodconnect-db
+    plan: basic-256mb
+    databaseName: foodconnect
+    user: foodconnect
+
+services:
+  - type: web
+    name: foodconnect
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: python seed_data.py
+    startCommand: gunicorn --worker-class gthread --workers 1 --threads 100 wsgi:app
+    healthCheckPath: /
+    disk:
+      name: foodconnect-uploads
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: foodconnect-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: UPLOAD_FOLDER
+        value: /var/data/uploads
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: FLASK_ENV
+        value: production
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: EMAIL_ADDRESS
+        sync: false
+      - key: EMAIL_APP_PASSWORD
+        sync: false

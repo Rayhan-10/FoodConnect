@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit {{ restaurant.name }} — FoodConnect</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="fc-body">
+  <main class="report-wrap" style="max-width:760px">
+    <a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}">← Back to restaurant</a>
+    <h1 style="margin:24px 0">Edit restaurant</h1>
+    {% with messages = get_flashed_messages() %}{% if messages %}<ul class="flash-messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}{% endwith %}
+    <form method="POST" enctype="multipart/form-data">
+      <label>Restaurant name<input name="name" required maxlength="150" value="{{ restaurant.name }}"></label>
+      <label>Cuisine type<input name="cuisine_type" required maxlength="80" value="{{ restaurant.cuisine_type or '' }}"></label>
+      <label>Price range<select name="price_range" required>{% for price in ['$', '$$', '$$$'] %}<option value="{{ price }}" {% if restaurant.price_range == price %}selected{% endif %}>{{ price }}</option>{% endfor %}</select></label>
+      <label>Address<input name="address" required maxlength="255" value="{{ location.address if location else '' }}"></label>
+      <label>YouTube URL (optional)<input name="video_url" type="url" value="{{ restaurant.video_url or '' }}"></label>
+      <label>Replace restaurant photo (optional)<input name="cover_photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+      <button class="btn btn-orange" type="submit">Save changes</button>
+    </form>
+  </main>
+</body>
+</html>
