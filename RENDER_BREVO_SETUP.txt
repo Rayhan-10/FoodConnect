@@ -1,0 +1,12 @@
+FoodConnect Brevo Email Configuration
+
+Replace app.py with this revised app.py. requirements.txt is unchanged; the implementation uses Python's standard-library HTTPS client, so no new package is required.
+
+Add these Render Environment Variables:
+- BREVO_API_KEY = your Brevo API key (secret; never commit it)
+- BREVO_SENDER_EMAIL = the exact sender address verified in Brevo
+- BREVO_SENDER_NAME = FoodConnect (optional)
+
+Do not put the API key in source code, GitHub, or chat. The sender email must be verified in Brevo. After setting the variables, save/redeploy Render.
+
+The app now sends transactional OTP mail through https://api.brevo.com/v3/smtp/email over HTTPS. OTPs and API keys are not printed in logs. The resend route reports failure if Brevo rejects the request.

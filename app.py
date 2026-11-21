@@ -1,9 +1,10 @@
 import os
 import secrets
 import uuid
-import smtplib
+import json
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 from datetime import datetime, timezone, timedelta
-from email.message import EmailMessage
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file, send_from_directory
 from flask_login import LoginManager, login_user, logout_user
@@ -194,30 +195,61 @@ def valid_image_upload(file_storage):
 
 
 def send_otp_email(to_email, otp):
-    """Try to send a real email with the OTP. Falls back to printing in the
-    terminal if email credentials are missing or sending fails, so local
-    development / testing is never blocked."""
-    email_address = os.getenv('EMAIL_ADDRESS')
-    email_password = os.getenv('EMAIL_APP_PASSWORD')
+    """Send an account-verification code through Brevo's HTTPS API.
 
-    if not email_address or not email_password:
-        print(f'===== (No email configured) OTP for {to_email}: {otp} =====')
+    Required environment variables:
+      BREVO_API_KEY: Brevo API key (keep secret)
+      BREVO_SENDER_EMAIL: the verified sender address in Brevo
+    Optional:
+      BREVO_SENDER_NAME: display name (defaults to FoodConnect)
+
+    Never log the OTP or API key.
+    """
+    api_key = (os.getenv('BREVO_API_KEY') or '').strip()
+    sender_email = (os.getenv('BREVO_SENDER_EMAIL') or os.getenv('EMAIL_ADDRESS') or '').strip()
+    sender_name = (os.getenv('BREVO_SENDER_NAME') or 'FoodConnect').strip()
+
+    if not api_key or not sender_email:
+        app.logger.error('Brevo email is not configured: missing BREVO_API_KEY or sender email.')
         return False
 
-    msg = EmailMessage()
-    msg['Subject'] = 'Your FoodConnect Verification Code'
-    msg['From'] = email_address
-    msg['To'] = to_email
-    msg.set_content(f'Your FoodConnect OTP code is: {otp}\n\nThis code will expire soon.')
+    payload = {
+        'sender': {'name': sender_name, 'email': sender_email},
+        'to': [{'email': to_email}],
+        'subject': 'Your FoodConnect Verification Code',
+        'textContent': (
+            f'Your FoodConnect verification code is: {otp}\n\n'
+            'This code expires in 10 minutes. If you did not create this account, '
+            'you can ignore this email.'
+        )
+    }
+    request = Request(
+        'https://api.brevo.com/v3/smtp/email',
+        data=json.dumps(payload).encode('utf-8'),
+        headers={
+            'accept': 'application/json',
+            'api-key': api_key,
+            'content-type': 'application/json'
+        },
+        method='POST'
+    )
 
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(email_address, email_password)
-            smtp.send_message(msg)
-        print(f'OTP email sent to {to_email}')
-        return True
-    except Exception as e:
-        print(f'Email sending failed ({e}). ===== Fallback OTP for {to_email}: {otp} =====')
+        with urlopen(request, timeout=20) as response:
+            if response.status in (200, 201, 202):
+                app.logger.info('OTP email accepted by Brevo for delivery.')
+                return True
+            app.logger.error('Brevo returned unexpected HTTP status %s.', response.status)
+            return False
+    except HTTPError as error:
+        # Log status only; do not expose credentials or OTP in application logs.
+        app.logger.error('Brevo rejected the email request (HTTP %s).', error.code)
+        return False
+    except (URLError, TimeoutError, OSError) as error:
+        app.logger.error('Could not connect to Brevo email API: %s', type(error).__name__)
+        return False
+    except Exception as error:
+        app.logger.error('Unexpected error while sending OTP email: %s', type(error).__name__)
         return False
 
 
@@ -325,10 +357,8 @@ def signup():
         db.session.commit()
 
         email_sent = send_otp_email(email, otp)
-        if not email_sent and (os.getenv('EMAIL_ADDRESS') and os.getenv('EMAIL_APP_PASSWORD')):
-            flash('OTP email could not be sent. Please check the email configuration and try again.')
-        elif not email_sent:
-            flash('OTP email is not configured on the server. Please contact the project administrator.')
+        if not email_sent:
+            flash('We could not send your verification email. Please check the sender/API configuration and try again.')
 
         session['pending_user_id'] = new_user.id
         return redirect(url_for('verify_otp'))
@@ -388,8 +418,10 @@ def resend_otp():
     user.otp_code = otp
     user.otp_created_at = datetime.now(timezone.utc)
     db.session.commit()
-    send_otp_email(user.email, otp)
-    flash('A new verification code has been sent. It is valid for 10 minutes.')
+    if send_otp_email(user.email, otp):
+        flash('A new verification code has been sent. It is valid for 10 minutes.')
+    else:
+        flash('We could not send the verification email. Please try again later.')
     return redirect(url_for('verify_otp'))
 
 
