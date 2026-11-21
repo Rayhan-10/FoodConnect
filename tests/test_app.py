@@ -124,7 +124,10 @@ check('OTP verification accepted', v.status_code == 302 and 'login' in v.headers
 bad = c.post('/login', data={'username': 'tester1', 'password': 'wrong'}, follow_redirects=True)
 check('wrong password rejected', b'Invalid username or password' in bad.data)
 ok = c.post('/login', data={'username': 'tester1', 'password': 'Password123'}, follow_redirects=False)
-check('login succeeds', ok.status_code == 302)
+check('login succeeds with username', ok.status_code == 302)
+c.get('/logout')
+email_login = c.post('/login', data={'username': 'tester1@example.com', 'password': 'Password123'}, follow_redirects=False)
+check('login succeeds with email address', email_login.status_code == 302)
 check('dashboard (profile) 200 when logged in', c.get('/dashboard').status_code == 200)
 
 # ---- review with photo upload ----

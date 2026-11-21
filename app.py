@@ -292,28 +292,43 @@ def signup():
         if len(password) < 8:
             flash('Password must be at least 8 characters long.')
             return redirect(url_for('signup'))
-        if User.query.filter(db.func.lower(User.username) == username.lower()).first():
-            flash('Username already taken.')
-            return redirect(url_for('signup'))
-        if User.query.filter(db.func.lower(User.email) == email).first():
-            flash('Email already registered.')
+        existing_email_user = User.query.filter(db.func.lower(User.email) == email).first()
+        existing_username_user = User.query.filter(db.func.lower(User.username) == username.lower()).first()
+
+        # Permit a fresh attempt for an unverified account instead of forcing
+        # the user to manually delete a previous incomplete signup.
+        if existing_email_user and existing_email_user.is_verified:
+            flash('This email is already registered. Please log in instead.')
+            return redirect(url_for('login'))
+        if existing_username_user and existing_username_user is not existing_email_user:
+            flash('Username already taken. Please choose another username.')
             return redirect(url_for('signup'))
 
         password_hash = generate_password_hash(password, method='scrypt')
         otp = f"{secrets.randbelow(1000000):06d}"
-
-        new_user = User(
-            username=username,
-            email=email,
-            password_hash=password_hash,
-            otp_code=otp,
-            otp_created_at=datetime.now(timezone.utc),
-            is_verified=False
-        )
-        db.session.add(new_user)
+        if existing_email_user:
+            new_user = existing_email_user
+            new_user.username = username
+            new_user.password_hash = password_hash
+            new_user.otp_code = otp
+            new_user.otp_created_at = datetime.now(timezone.utc)
+        else:
+            new_user = User(
+                username=username,
+                email=email,
+                password_hash=password_hash,
+                otp_code=otp,
+                otp_created_at=datetime.now(timezone.utc),
+                is_verified=False
+            )
+            db.session.add(new_user)
         db.session.commit()
 
-        send_otp_email(email, otp)
+        email_sent = send_otp_email(email, otp)
+        if not email_sent and (os.getenv('EMAIL_ADDRESS') and os.getenv('EMAIL_APP_PASSWORD')):
+            flash('OTP email could not be sent. Please check the email configuration and try again.')
+        elif not email_sent:
+            flash('OTP email is not configured on the server. Please contact the project administrator.')
 
         session['pending_user_id'] = new_user.id
         return redirect(url_for('verify_otp'))
@@ -384,10 +399,16 @@ def resend_otp():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username'].strip()
-        password = request.form['password']
+        login_identifier = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
 
-        user = User.query.filter_by(username=username).first()
+        # Accept either username or email (case-insensitive).
+        user = User.query.filter(
+            or_(
+                db.func.lower(User.username) == login_identifier.lower(),
+                db.func.lower(User.email) == login_identifier.lower()
+            )
+        ).first()
 
         if not user or not check_password_hash(user.password_hash, password):
             flash('Invalid username or password.')
@@ -417,7 +438,11 @@ def dashboard():
     if 'user_id' not in session:
         flash('Please log in first.')
         return redirect(url_for('login'))
-    return render_template('dashboard.html', username=session['username'])
+    return render_template(
+        'dashboard.html',
+        username=session.get('username', 'User'),
+        is_admin=current_user_is_admin()
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1121,6 +1146,19 @@ def monthly_top_restaurants():
         .order_by(func.avg(Rating.stars).desc(), func.count(distinct(Rating.id)).desc()).limit(10).all()
     return [{'id': r.id, 'name': r.name, 'cuisine': r.cuisine_type or '—',
              'average_rating': round(float(r.average_rating), 2), 'rating_count': r.rating_count} for r in rows]
+
+
+@app.route('/admin')
+def admin_dashboard():
+    if not current_user_is_admin():
+        return ('Admin access required. Set ADMIN_EMAIL to a verified account email and sign in with that account.', 403)
+    return render_template(
+        'admin_dashboard.html',
+        user_count=User.query.count(),
+        restaurant_count=Restaurant.query.count(),
+        review_count=Review.query.count(),
+        food_count=FoodItem.query.count()
+    )
 
 
 @app.route('/admin/reports')
